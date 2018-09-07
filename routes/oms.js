@@ -26,7 +26,6 @@ router.post('/monitor', async (req, res)=>{
         let order = await Order.findOne({_id: id}).exec();
         convertTime = new Date(order.delDateTime).getTime();
         order.delDateTime = convertTime + extendTime;
-        console.log('delDateTime: 'order.delDateTime)
         order.delTime = functions.getTime(order.delDateTime)
         order.delDate = functions.getDate(order.delDateTime)
         //remove this when done testing order.processed = true;
