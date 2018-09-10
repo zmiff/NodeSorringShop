@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { check, validationResult } = require('express-validator/check');
+// Set your secret key: remember to change this to your live secret key in production
+// See your keys here: https://dashboard.stripe.com/account/apikeys
+var stripe = require("stripe")("sk_test_rnV09unitxXQOP0Ep8hiFFdK");
 
 const Product = require('../models/product');
 const Order = require('../models/order');
@@ -36,92 +39,129 @@ router.get('/', async(req, res, next)=>{
   })
 });//end home page
 
-  router.get('/add-to-cart/:id', function(req, res, next){
-    // get the added product id
-    var productId = req.params.id;
-    //we create a new cart everytime the add button is pressed, and the old cart is inserted to the new cart. the old cart is already stored in the session req.session.cart ? if it does exist, if it doesnt we add an empty js object {}.
-    var cart = new Cart(req.session.cart ? req.session.cart : {});
+//find os
+router.get('/find',(req, res)=>{
+  res.render('shop/find');
+});
 
-    req.session.shopping = true;
-
-    Product.findById(productId, function(err, product){
-      if(err){
-        return res.redirect('/');
-      }
-      //add the item to the cart
-      cart.add(product, product.id);
-      //store the cart in the session.cart, the express.session saves the cart to DB automatic everytime we save something to session.
-      req.session.cart = cart;
-      //for dev purpose only
-      console.log(req.session.cart);
-      //redirect to product page
-      res.redirect('/')
-    });// end Product.find
-  });//end add-to-cart
-
-  router.get('/add-topping/:cartId/:toppingId', function(req, res, next){
-    // get the cart id of the item to be added topping on, and the topping id to be added
-    var cartId = req.params.cartId;
-    var toppingId = req.params.toppingId
-    //find the topping.
-    Product.findById(toppingId, function(err, topping){
-      if(err){
-        return res.redirect('/');
-      }
-      //we create a new cart everytime the add button is pressed, and the old cart is inserted to the new cart. the old cart is already stored in the session req.session.cart ? if it does exist, if it doesnt we add an empty js object {}.
-      var cart = new Cart(req.session.cart ? req.session.cart : {});
-      //add the item to the cart
-      cart.addTopping(cartId,topping);
-      //store the cart in the session.cart, the express.session saves the cart to DB automatic everytime we save something to session.
-      req.session.cart = cart;
-      //redirect to shoppingCart page
-      res.redirect('/shoppingCart/');
-    }); // end Product.find
-  }); // end add-topping
-
-  router.get('/remove/:cartId', function (req, res){
-    var cartId = req.params.cartId;
-    //we create a new cart everytime the add buttonis pressed, and the old cart is inserted to the new cart. the old cart is already stored in the session req.session.cart ? if it does exist, if it doesnt we add an empty js object {}.
-    var cart = new Cart(req.session.cart ? req.session.cart : {});
-    //add the item to the cart
-    cart.remove(cartId);
-    //store the cart in the session.cart, the express.session saves the cart to DB automatic everytime we save something to session.
-    req.session.cart = cart;
-    //redirect to shoppingCart page
-    res.redirect('/shoppingCart/');
-  });
-
-  router.get('/remove/:cartId/:toppingId', function (req, res){
-    var cartId = req.params.cartId;
-    var toppingId = req.params.toppingId;
-    var cart = new Cart(req.session.cart ? req.session.cart : {});
-    cart.removeTopping(cartId, toppingId);
-    req.session.cart = cart;
-    res.redirect('/shoppingCart/');
-  })
-
+// get shoppingcart
 router.get('/shoppingCart', middleware.indexIsLoggedIn, async(req, res) => {
   if(!req.session.cart){
     return res.render('shop/shoppingCart', {products: null});
   }
   let toppings = await Product.find({type: 'Topping'});
   var cart = new Cart(req.session.cart);
+  if(cart.delType == 'LEVERING'){
+    delType = 'Levering 30 kr'
+  }
+  else if(cart.delType == 'AFHENTNING'){
+    delType = 'Afhentning'
+  }
+  else{
+    delType = 'Vælg venligst'
+  }
   res.render('shop/shoppingCart',{
+    messages: req.flash('errors'),
+    delType,
     toppings: toppings,
     products: cart.generateArray(),
     totalPrice: cart.totalPrice
   })
 });
 
-//find os
-router.get('/find',(req, res)=>{
-  res.render('shop/find');
+// add item to cart
+router.get('/add-to-cart/:id', function(req, res, next){
+  // get the added product id
+  var productId = req.params.id;
+  //we create a new cart everytime the add button is pressed, and the old cart is inserted to the new cart. the old cart is already stored in the session req.session.cart ? if it does exist, if it doesnt we add an empty js object {}.
+  var cart = new Cart(req.session.cart ? req.session.cart : {});
+
+  req.session.shopping = true;
+
+  Product.findById(productId, function(err, product){
+    if(err){
+      return res.redirect('/');
+    }
+    //add the item to the cart
+    cart.add(product, product.id);
+    //store the cart in the session.cart, the express.session saves the cart to DB automatic everytime we save something to session.
+    req.session.cart = cart;
+    //for dev purpose only
+    console.log(req.session.cart);
+    //redirect to product page
+    res.redirect('/')
+  });// end Product.find
+});//end add-to-cart
+
+// add topping to item in cart
+router.get('/add-topping/:cartId/:toppingId', function(req, res, next){
+  // get the cart id of the item to be added topping on, and the topping id to be added
+  var cartId = req.params.cartId;
+  var toppingId = req.params.toppingId
+  //find the topping.
+  Product.findById(toppingId, function(err, topping){
+    if(err){
+      return res.redirect('/');
+    }
+    //we create a new cart everytime the add button is pressed, and the old cart is inserted to the new cart. the old cart is already stored in the session req.session.cart ? if it does exist, if it doesnt we add an empty js object {}.
+    var cart = new Cart(req.session.cart ? req.session.cart : {});
+    //add the item to the cart
+    cart.addTopping(cartId,topping);
+    //store the cart in the session.cart, the express.session saves the cart to DB automatic everytime we save something to session.
+    req.session.cart = cart;
+    //redirect to shoppingCart page
+    res.redirect('/shoppingCart/');
+  }); // end Product.find
+}); // end add-topping
+
+// remove item from cart
+router.get('/remove/:cartId', function (req, res){
+  var cartId = req.params.cartId;
+  //we create a new cart everytime the add buttonis pressed, and the old cart is inserted to the new cart. the old cart is already stored in the session req.session.cart ? if it does exist, if it doesnt we add an empty js object {}.
+  var cart = new Cart(req.session.cart ? req.session.cart : {});
+  //add the item to the cart
+  cart.remove(cartId);
+  //store the cart in the session.cart, the express.session saves the cart to DB automatic everytime we save something to session.
+  req.session.cart = cart;
+  //redirect to shoppingCart page
+  res.redirect('/shoppingCart/');
 });
+
+// remove topping from item
+router.get('/remove/:cartId/:toppingId', function (req, res){
+  var cartId = req.params.cartId;
+  var toppingId = req.params.toppingId;
+  var cart = new Cart(req.session.cart ? req.session.cart : {});
+  cart.removeTopping(cartId, toppingId);
+  req.session.cart = cart;
+  res.redirect('/shoppingCart/');
+})
+
+//change delType
+router.get('/delType/:type', async (req, res)=>{
+  let delType = req.params.type;
+  var cart = new Cart(req.session.cart ? req.session.cart : {});
+  console.log(cart.delType+' '+delType)
+  if(delType == 'LEVERING' && cart.delType != 'LEVERING'){
+    cart.delType = delType;
+    cart.totalPrice += 30
+  }else if(delType == 'AFHENTNING' && cart.delType == 'LEVERING'){
+    cart.delType = delType;
+    cart.totalPrice -= 30
+  }
+  req.session.cart = cart;
+  res.redirect('/shoppingCart');
+})
 
 //bestilling
 //add middleware.hasCartSession
 router.get('/bestilling',middleware.indexIsLoggedIn, async (req, res)=>{
   var cart = new Cart(req.session.cart);
+  if(cart.delType == 'choose'){
+    req.flash('errors', 'Vælg venligst leveringsform');
+    res.redirect('/shoppingCart');
+    return
+  }
   var user = req.user;
   let shopTime = await Shop.findOne({timeId: 1});
   res.render('shop/bestilling',{
@@ -142,7 +182,7 @@ router.get('/bestilling',middleware.indexIsLoggedIn, async (req, res)=>{
 //add middleware.hasCartSession
 router.post('/sendBestilling',middleware.indexIsLoggedIn, middleware.checkBestillingBody, async (req, res, next)=>{
   var cart = new Cart(req.session.cart);
-
+  
   //customer & shoptime details stored in var
   let customerDetails = {
     name:req.body.inputName,
@@ -185,7 +225,7 @@ router.post('/sendBestilling',middleware.indexIsLoggedIn, middleware.checkBestil
       processed: false,
       status: 'pending',
       customerDetails,
-      delType: 'AFHENTNING',
+      delType: cart.delType
       });
       order.save((err, result)=>{
         if(err){
@@ -206,12 +246,76 @@ router.post('/sendBestilling',middleware.indexIsLoggedIn, middleware.checkBestil
           delTime: orderPickupTime,
           delDate: orderPickupDate,
           customerDetails,
-          delType: 'AFHENTNING'
+          delType: cart.delType
         });//end res.io.emit
         res.redirect(`processing?id=${id}`);
       })//end order.save
     }//end else
   } //end if cash payment && asap && pickup
+
+  if(req.body.cashOnline==='online' && req.body.asapPick==='asap' && req.body.pickupDelivery==='pickup'){
+    console.log('online && asap && pickup fired')
+    // Token is created using Checkout or Elements!
+    // Get the payment token ID submitted by the form:
+    const token = req.body.stripeToken; // Using Express
+    //get del/pickup time
+    let route = await geocode.getLocation(address)
+    if(route === 'NOT FOUND'){ //if errormessage from geocodeAddress
+      req.flash('errors', 'kunne ikke finde den adresse');
+      res.redirect('/bestilling');
+    }else{
+      stripe.charges.create({
+        amount: 999,
+        currency: "dkk",
+        description: "Example charge",
+        source: req.body.stripeToken,
+      },(err, charge)=>{
+        if(err){
+          req.flash('error', err.message);
+          return res.redirect('shoppingCart');
+        }
+        //save order to variable
+        var order = new Order({
+          user: req.user, //from passport
+          cart,
+          paymentType: req.body.inputStateBetaling,
+          deliveryType: req.body.pickupDelivery,
+          dateTime: d,
+          delDateTime: pickupTime,
+          delTime: orderPickupTime,
+          delDate: orderPickupDate,
+          route,
+          processed: false,
+          status: 'pending',
+          customerDetails,
+          delType: cart.delType
+          });
+          order.save((err, result)=>{
+            if(err){
+              console.log(err);
+              res.redirect('some-thing-went-wrong',{
+                errorMSG: 'Noget gik galt, prøv venligst igen, eller kontakt restaurenten'
+              })//end res.redirect
+            }//end if
+            var id = order._id;
+            //socket io stuff here send to OMS
+            res.io.emit('newOrder', {
+              id,
+              totalPrice: order.cart.totalPrice,
+              order,
+              user: req.user,
+              route,
+              d,
+              delTime: orderPickupTime,
+              delDate: orderPickupDate,
+              customerDetails,
+              delType: cart.delType
+            });//end res.io.emit
+            res.redirect(`processing?id=${id}`);
+          })//end order.save
+      })//end charge callback
+    }//end else
+  }// end if online payment && asap && pickup
 
 
   else{
@@ -234,7 +338,6 @@ router.get('/processing', middleware.indexIsLoggedIn, (req, res)=>{
 });//end get processing
 
 router.get('/accepted', middleware.indexIsLoggedIn, async(req, res)=>{
-  //res.set('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
   var id = req.query.id;
   let order = await Order.findById(id);
   res.render('shop/accepted',{

@@ -1,7 +1,27 @@
 {{# if products}}
-  <div class="row">
-    <div class="col-md-6 col-sm-6 offset-3">
+  <div class="row row justify-content-md-center">
+    <div class="col-md-6">
       <ul class="list-group">
+        {{# if messages}}
+          <div class="alert alert-danger">
+            {{# each messages}}
+              <p>{{this}}</p>
+            {{/each}}
+          </div>
+        {{/if}}
+          <li class="list-group-item">
+            <h5>Vælg levering / Afhentning</h5>
+            <div class="dropdown float-left">
+              <button class="btn btn-default dropdown-toggle" type="button" id="dropdownDelTypeButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                {{ delType }}
+              </button>
+              <div class="dropdown-menu" aria-labelledby="dropdownDelTypeButton">
+                <a class="dropdown-item" href="/delType/LEVERING">Levering +30kr</a>
+                <a class="dropdown-item" href="/delType/AFHENTNING/{{this._id}}">Afhentning</a>
+              </div>
+            </div>
+            <input id="pickupDelivery" name="pickupDelivery" hidden type="text" value=""  />
+          </li>
           {{# each products}}
               <li class="list-group-item">
                 <strong>{{ this.qty}} x {{ this.item.title }}</strong>
@@ -34,20 +54,24 @@
     </div>
   </div>
   <hr />
-  <div class="row">
-    <div class="col-sm-6 col-md-6 offset-3 offset-3">
+  <div class="row row justify-content-md-center">
+    <div class="col-md-6">
       <strong>Total: {{ totalPrice }}kr</strong>
     </div>
   </div>
-  <div class="row">
-    <div class="col-sm-6 col-md-6 offset-3 offset-3">
+  <div class="row row justify-content-md-center">
+    <div class="col-md-6">
       <a href="/bestilling" class="btn btn-success" role="button">Videre til bestilling</a>
     </div>
   </div>
   {{else}}
-  <div class="row">
-    <div class="col-sm-6 col-md-6 offset-3 offset-3">
+  <div class="row row justify-content-md-center">
+    <div class="col-md-6">
       <h2>Ingen varer i kurv</h2>
     </div>
   </div>
 {{/ if}}
+
+{{#section 'script'}}
+  <script type="text/javascript" src="/javascript/cart_script.js"></script>
+{{/section}}

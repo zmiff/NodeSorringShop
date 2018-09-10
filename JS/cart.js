@@ -4,6 +4,7 @@ module.exports = function Cart(oldCart){
   this.items = oldCart.items || {};
   this.totalQty = oldCart.totalQty || 0;
   this.totalPrice = oldCart.totalPrice || 0;
+  this.delType = oldCart.delType || 'choose';
 
   //adding a product to the cart
   this.add = function(item, id){

@@ -1,5 +1,5 @@
-<div class="row justify-content-md-center">
-  <div class="col-md-6">
+<div class="row">
+  <div class="col-md-6 col-sm-6 offset-3">
     <ul class="list-group">
       {{# if messages}}
         <div class="alert alert-danger">
@@ -18,7 +18,7 @@
             <option>Afhentning hurtigs muligt</option>
             <option>Afhentning vælg tidspunkt</option>
           </select>
-          <input id="pickupDelivery" name="pickupDelivery" hidden type="text" value=""  />
+          <input id="pickupDelivery" name="pickupDelivery" hidden type="text" value="delivery"  />
         </li>
         <li class="list-group-item">
           <label for="inputStateBetaling">Vælg betalingsform</label>
@@ -42,6 +42,8 @@
           </div>
         -->
         </li>
+    </ul>
+    <ul class="list-group">
       <li class="list-group-item">
         {{# if name}}
           <label for="inputName">Navn</label>
@@ -79,22 +81,12 @@
           <input name="inputPhone" id="inputPhone" type="text" class="form-control" placeholder="indtast telefonnummer"/>
         {{/ if}}
       </li>
-      <div id="buttons">
-        <div id="stripeBtn">
-          <script
-            src="https://checkout.stripe.com/checkout.js" class="stripe-button"
-            data-key="pk_test_Gu5S5PbCNct5pXLa8UZnhXQM"
-            data-amount="999"
-            data-name="UT"
-            data-description="Widget"
-            data-image="https://stripe.com/img/documentation/checkout/marketplace.png"
-            data-locale="auto"
-            data-currency="dkk">
-          </script>
-        </div>
-          <input id="btnSend" type="submit" class="btn btn-success" value="Til betaling"/>
-      </div>
     </ul>
+    <div class="row">
+      <div class="col-sm-6 col-md-6">
+        <input id="btnSend" type="submit" class="btn btn-success" value="Til betaling"/>
+      </div>
+    </div>
   </form>
   </div>
 </div>

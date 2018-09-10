@@ -1,4 +1,6 @@
 $(document).ready(function(){
+  $('#btnSend').hide()
+  $('#stripeBtn').hide();
   //monitor.hbs change print extend time
     $('.inputStateExtend').on('change', function(){
       if($(this).val()==0){
@@ -8,7 +10,6 @@ $(document).ready(function(){
         $(this).parent().next().removeClass('noprint').addClass('onlyprint')
         $(this).parent().next().text('Forlænget med: '+$(this).val()+' minutter')
       }
-
     });
 
   //Hide show timepicker
@@ -27,18 +28,27 @@ $(document).ready(function(){
   //change bestil/betal knappe
   $("#inputStateBetaling").change(function(){
     if($("#inputStateBetaling").val() === "Online med kort"){
-      $('#btnSend').animate({'opacity': 0}, 100, function () {
+      /*$('#btnSend').animate({'opacity': 0}, 100, function () {
         $(this).val('Til betaling');
-      }).animate({'opacity': 1}, 300);
+      }).animate({'opacity': 1}, 300);*/
+      $('#btnSend').hide()
+      $('#stripeBtn').show();
       $('#cashOnline').val('online');
     }
     else if($("#inputStateBetaling").val() === "Ved levering/afhentning (kontant eller mobilepay)"){
-      $('#btnSend').animate({'opacity': 0}, 100, function () {
+      /*$('#btnSend').animate({'opacity': 0}, 100, function () {
         $(this).val('Send ordre');
-      }).animate({'opacity': 1}, 300);
+      }).animate({'opacity': 1}, 300);*/
+      $('#stripeBtn').hide();
+      $('#btnSend').show()
       $('#cashOnline').val('cash');
     }
+    else{
+      $('#stripeBtn').hide();
+      $('#btnSend').hide();
+    }
   });
+  
   //end change bestil/betal knappe
 
   //change levering/afhentning value
@@ -48,6 +58,9 @@ $(document).ready(function(){
       }
       else if($("#inputStateLevering").val() === "Udbringning hurtigst muligt +30 kr" || $("#inputStateLevering").val() === "Udbringnig vælg tidspunkt +30 kr"){
         $('#pickupDelivery').val('delivery');
+      }
+      else{
+        $('#pickupDelivery').val('');
       }
   });//end levering/afhentning value
 
@@ -103,7 +116,7 @@ if(deliveryTime){
     $('#inputStateTidspunkt').prop('disabled', 'disabled');
     $("#inputStateLevering").change(function(){
         if($("#inputStateLevering").val() === "Afhentning vælg tidspunkt" || $("#inputStateLevering").val() === "Udbringnig vælg tidspunkt +30 kr"){
-          $('#btnSend').fadeOut();
+          $('#btnSend').prop('disabled', true)
         }
         else if($("#inputStateLevering").val() === "Udbringning hurtigst muligt +30 kr" || $("#inputStateLevering").val() === "Afhentning hurtigs muligt"){
           $('#btnSend').fadeIn();

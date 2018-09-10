@@ -4,11 +4,19 @@
   padding: 0, 0, 0, 10px;
 }
 
+#cover{
+  width:100%;
+}
+
 /* green color paleton #479030 */
 /* red color paleton #AA4139 */
 
 /*TWBS Color link https://work.smarchal.com/twbscolor/4.0.0/scss/fbfaf7aa4139aa4139ecf0f10*/
-.dropdown-menu { right: 0; left: auto; }
+.dropdown-menu { 
+  right: 0; 
+  left: auto; 
+}
+
 .navbar {
   background-color: #fbfaf7;
   border-bottom:5px solid #AA4139;
