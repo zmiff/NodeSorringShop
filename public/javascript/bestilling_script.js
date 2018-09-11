@@ -1,69 +1,41 @@
 $(document).ready(function(){
-  $('#btnSend').hide()
-  $('#stripeBtn').hide();
-  //monitor.hbs change print extend time
-    $('.inputStateExtend').on('change', function(){
-      if($(this).val()==0){
-        $(this).parent().next().removeClass('onlyprint').addClass('noprint')
-        $(this).parent().next().text('')
-      }else{
-        $(this).parent().next().removeClass('noprint').addClass('onlyprint')
-        $(this).parent().next().text('Forlænget med: '+$(this).val()+' minutter')
-      }
-    });
+
 
   //Hide show timepicker
-  $("#inputStateLevering").change(function(){
-      if($("#inputStateLevering").val() === "Afhentning vælg tidspunkt" || $("#inputStateLevering").val() === "Udbringnig vælg tidspunkt +30 kr"){
+  $("#inputStateTid").change(function(){
+      if($("#inputStateTid").val() === "vælg selv tid"){
         $('#timePicker').slideDown();
-        $('#asapPick').val('pick');
       }
-      else if($("#inputStateLevering").val() === "Udbringning hurtigst muligt +30 kr" || $("#inputStateLevering").val() === "Afhentning hurtigs muligt"){
+      else if($("#inputStateTid").val() === "hurtigst muligt"){
         $('#timePicker').slideUp();
-        $('#asapPick').val('asap');
       }
   });
   //end hide show timepicker
 
   //change bestil/betal knappe
+  $('#btnSend').hide();
+  $('.stripe-button-el').hide();
   $("#inputStateBetaling").change(function(){
     if($("#inputStateBetaling").val() === "Online med kort"){
-      /*$('#btnSend').animate({'opacity': 0}, 100, function () {
-        $(this).val('Til betaling');
-      }).animate({'opacity': 1}, 300);*/
-      $('#btnSend').hide()
-      $('#stripeBtn').show();
-      $('#cashOnline').val('online');
-    }
-    else if($("#inputStateBetaling").val() === "Ved levering/afhentning (kontant eller mobilepay)"){
-      /*$('#btnSend').animate({'opacity': 0}, 100, function () {
-        $(this).val('Send ordre');
-      }).animate({'opacity': 1}, 300);*/
-      $('#stripeBtn').hide();
-      $('#btnSend').show()
-      $('#cashOnline').val('cash');
-    }
-    else{
-      $('#stripeBtn').hide();
+      $('.stripe-button-el').prop("disabled",false);
+      $('.stripe-button-el').show();
       $('#btnSend').hide();
     }
+    else if($("#inputStateBetaling").val() === "Ved levering/afhentning (kontant eller mobilepay)"){
+      $('#btnSend').show();
+      $('.stripe-button-el').hide();
+      $('.stripe-button-el').prop("disabled",true);
+    }
+    else{
+      $('#btnSend').hide();
+      $('#customButton').hide();
+    }
+  });//end change bestil/betal knappe
+
+  $('#btnSend').on('click', function(){
+    $('#checkout-form').submit()
+    $('#btnSend').prop("disabled",true);
   });
-  
-  //end change bestil/betal knappe
-
-  //change levering/afhentning value
-  $("#inputStateLevering").change(function(){
-      if($("#inputStateLevering").val() === "Afhentning vælg tidspunkt" || $("#inputStateLevering").val() === "Afhentning hurtigs muligt"){
-        $('#pickupDelivery').val('pickup');
-      }
-      else if($("#inputStateLevering").val() === "Udbringning hurtigst muligt +30 kr" || $("#inputStateLevering").val() === "Udbringnig vælg tidspunkt +30 kr"){
-        $('#pickupDelivery').val('delivery');
-      }
-      else{
-        $('#pickupDelivery').val('');
-      }
-  });//end levering/afhentning value
-
 
 //date- & timepicker & order time stuff
 if(deliveryTime){
@@ -114,14 +86,6 @@ if(deliveryTime){
   if(delTime>21+':'+00){
     $('#inputStateTidspunkt').val('Butikken har desværre lukket for selvvalgt tid for idag.');
     $('#inputStateTidspunkt').prop('disabled', 'disabled');
-    $("#inputStateLevering").change(function(){
-        if($("#inputStateLevering").val() === "Afhentning vælg tidspunkt" || $("#inputStateLevering").val() === "Udbringnig vælg tidspunkt +30 kr"){
-          $('#btnSend').prop('disabled', true)
-        }
-        else if($("#inputStateLevering").val() === "Udbringning hurtigst muligt +30 kr" || $("#inputStateLevering").val() === "Afhentning hurtigs muligt"){
-          $('#btnSend').fadeIn();
-        }
-    });
     }
 
   $('#inputStateTidspunkt').timepicker({

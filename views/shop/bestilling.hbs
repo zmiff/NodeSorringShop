@@ -8,18 +8,7 @@
           {{/each}}
         </div>
       {{/if}}
-      <form action="/sendBestilling" method="post">
-        <li class="list-group-item">
-          <label for="inputStateLevering">Vælg levering</label>
-          <select name="inputStateLevering" id="inputStateLevering" class="form-control">
-            <option></option>
-            <option>Udbringning hurtigst muligt +30 kr</option>
-            <option>Udbringnig vælg tidspunkt +30 kr</option>
-            <option>Afhentning hurtigs muligt</option>
-            <option>Afhentning vælg tidspunkt</option>
-          </select>
-          <input id="pickupDelivery" name="pickupDelivery" hidden type="text" value=""  />
-        </li>
+      <form action="/sendBestilling" method="post" id="checkout-form">
         <li class="list-group-item">
           <label for="inputStateBetaling">Vælg betalingsform</label>
           <select name="inputStateBetaling" id="inputStateBetaling" class="form-control">
@@ -27,20 +16,19 @@
             <option>Online med kort</option>
             <option>Ved levering/afhentning (kontant eller mobilepay)</option>
           </select>
-          <input id="cashOnline" name="cashOnline" hidden type="text" value="online" />
+        </li>
+        <li class="list-group-item">
+          <label for="inputStateTid">Vælg tid</label>
+          <select name="inputStateTid" id="inputStateTid" class="form-control">
+            <option>hurtigst muligt</option>
+            <option>vælg selv tid</option>
+          </select>
         </li>
         <li class="list-group-item" style="display: none;" id="timePicker">
           <div>
             <label for="inputStateTidspunkt">Tidspunkt</label>
-            <input name="inputStateTidspunkt" id="inputStateTidspunkt" type="text" class="form-control" placeholder="Vælg">
-            <input id="asapPick" name="asapPick" hidden  type="text" value="asap"  />
+            <input name="inputStateTidspunkt" id="inputStateTidspunkt" type="text" class="form-control" placeholder="Vælg" autocomplete="false" >
           </div>
-          <!--ikke i brug
-          <div>
-            <label for="inputStateDato">Dag</label>
-            <input id="inputStateDato" type="text" class="form-control">
-          </div>
-        -->
         </li>
       <li class="list-group-item">
         {{# if name}}
@@ -80,19 +68,19 @@
         {{/ if}}
       </li>
       <div id="buttons">
-        <div id="stripeBtn">
           <script
             src="https://checkout.stripe.com/checkout.js" class="stripe-button"
             data-key="pk_test_Gu5S5PbCNct5pXLa8UZnhXQM"
-            data-amount="999"
-            data-name="UT"
-            data-description="Widget"
+            data-label="Betal med kort"
+            data-email="{{email}}"
+            data-amount="{{stripePrice}}"
+            data-name="Sorring Pizza"
+            data-description="tamertech"
             data-image="https://stripe.com/img/documentation/checkout/marketplace.png"
             data-locale="auto"
             data-currency="dkk">
           </script>
-        </div>
-          <input id="btnSend" type="submit" class="btn btn-success" value="Til betaling"/>
+          <input id="btnSend" type="submit" class="btn btn-secondary" value="Send bestilling"/>
       </div>
     </ul>
   </form>
@@ -103,11 +91,11 @@
 {{#section 'script'}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
 <script>
-  let deliveryTime = {{delTime}};
-  let pickupTime = {{pickTime}};
-  var socket = io.connect();
-  socket.on('connected', function(data){
-  console.log(data.connected)
+    let deliveryTime = {{delTime}};
+    let pickupTime = {{pickTime}};
+    var socket = io.connect();
+    socket.on('connected', function(data){
+    console.log(data.connected)
   });
 </script>
   <script type="text/javascript" src="/javascript/bestilling_script.js"></script>

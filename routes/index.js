@@ -3,7 +3,7 @@ const router = express.Router();
 const { check, validationResult } = require('express-validator/check');
 // Set your secret key: remember to change this to your live secret key in production
 // See your keys here: https://dashboard.stripe.com/account/apikeys
-var stripe = require("stripe")("sk_test_rnV09unitxXQOP0Ep8hiFFdK");
+var stripe = require("stripe")(process.env.stripe_key);
 
 const Product = require('../models/product');
 const Order = require('../models/order');
@@ -163,15 +163,19 @@ router.get('/bestilling',middleware.indexIsLoggedIn, async (req, res)=>{
     return
   }
   var user = req.user;
+  let totalPrice = cart.totalPrice;
+  let stripePrice = totalPrice * 100;
   let shopTime = await Shop.findOne({timeId: 1});
   res.render('shop/bestilling',{
     messages: req.flash('errors'),
+    email: user.email,
     name: user.name,
     address: user.address,
     city: user.city,
     zip: user.zip,
     phone: user.phone,
-    totalPrice: cart.totalPrice,
+    totalPrice,
+    stripePrice,
     products: cart.generateArray(),
     delTime: shopTime.deliveryTime,
     pickTime: shopTime.pickupTime
@@ -182,7 +186,8 @@ router.get('/bestilling',middleware.indexIsLoggedIn, async (req, res)=>{
 //add middleware.hasCartSession
 router.post('/sendBestilling',middleware.indexIsLoggedIn, middleware.checkBestillingBody, async (req, res, next)=>{
   var cart = new Cart(req.session.cart);
-  
+  let totalPrice = cart.totalPrice;
+  let stripePrice = totalPrice*100;
   //customer & shoptime details stored in var
   let customerDetails = {
     name:req.body.inputName,
@@ -200,12 +205,20 @@ router.post('/sendBestilling',middleware.indexIsLoggedIn, middleware.checkBestil
   let delTime = d+shopDelTime
   let orderPickupTime = functions.getTime(pickupTime);
   let orderPickupDate = functions.getDate(pickupTime);
-  let orderDelTime = functions.getTime(delTime);
+  let tempOrderDelTime = functions.getTime(delTime);
   let orderDelDate = functions.getDate(delTime);
 
+  if(req.body.inputStateTid == 'vælg selv tid' && req.body.inputStateTidspunkt != 'Butikken har desværre lukket for selvvalgt tid for idag.'){
+    orderDelTime = req.body.inputStateTidspunkt;
+  }
+  else{
+    orderDelTime = tempOrderDelTime;
+  }
+
   //if cash payment && asap && pickup
-  if(req.body.cashOnline==='cash' && req.body.asapPick==='asap' && req.body.pickupDelivery==='pickup'){
+  if(req.body.inputStateBetaling==='Ved levering/afhentning (kontant eller mobilepay)'){
     //get del/pickup time
+    console.log('cash fired')
     let route = await geocode.getLocation(address)
     if(route === 'NOT FOUND'){ //if errormessage from geocodeAddress
       req.flash('errors', 'kunne ikke finde den adresse');
@@ -253,8 +266,8 @@ router.post('/sendBestilling',middleware.indexIsLoggedIn, middleware.checkBestil
     }//end else
   } //end if cash payment && asap && pickup
 
-  if(req.body.cashOnline==='online' && req.body.asapPick==='asap' && req.body.pickupDelivery==='pickup'){
-    console.log('online && asap && pickup fired')
+  else if(req.body.inputStateBetaling==='Online med kort'){
+    console.log('online fired')
     // Token is created using Checkout or Elements!
     // Get the payment token ID submitted by the form:
     const token = req.body.stripeToken; // Using Express
@@ -265,13 +278,13 @@ router.post('/sendBestilling',middleware.indexIsLoggedIn, middleware.checkBestil
       res.redirect('/bestilling');
     }else{
       stripe.charges.create({
-        amount: 999,
+        amount: stripePrice,
         currency: "dkk",
-        description: "Example charge",
+        description: "fra node sorring shop",
         source: req.body.stripeToken,
       },(err, charge)=>{
         if(err){
-          req.flash('error', err.message);
+          req.flash('errors', err.message);
           return res.redirect('shoppingCart');
         }
         //save order to variable
